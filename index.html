@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Text to Wordsearch</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-maxlength/1.9.0/bootstrap-maxlength.min.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function() {
+
+      // used only to allow local serving of files
+      $.ajaxSetup({
+        beforeSend: function(xhr) {
+          if (xhr.overrideMimeType) {
+            xhr.overrideMimeType("application/json");
+          }
+        }
+      });
+      $('textarea#text').maxlength({
+        alwaysShow: true
+      });
+
+      $('#text').focus(); // set initial focus
+
+      $('form#submit').submit(function(event) {
+        $('#translation-input-submit').prop('disabled', true);
+
+        // process the form
+        $.ajax({
+            type: 'POST',
+            url: '/prod/translate',
+            data: JSON.stringify({
+              'text': $('#text').val(),
+              'source': $('#sourceLanguage').val(),
+              'target': $('#targetLanguage').val(),
+              'cdn_prefix': window.location.hostname
+            }),
+            contentType: 'application/json; charset=utf-8',
+            dataType: 'json',
+            encode: true
+          })
+          .done(function(data, textStatus, jqXHR) {
+            $('#translation-input-submit').prop('disabled', false);
+            if (data.error) {
+              $('#url-group').addClass('has-error'); // add the error class to show red input
+              $('#translation-error').show().text(data.error); // add the actual error message under our input
+            } else {
+              $('form#submit').hide(); // hide initial submit form
+              $('form#result').show(); // and show the one used to display the results
+              $('#textoutput').val(data.result).focus().select();
+            }
+          })
+          .fail(function(_, _, errorThrown) {
+            $('#translation-input-submit').prop('disabled', false);
+            $('#url-group').addClass('has-error'); // add the error class to show red input
+            $('#translation-error').show().text("Server error: " + errorThrown); // add the actual error message under our input
+          });
+
+        // stop the form from submitting the normal way and refreshing the page
+        event.preventDefault();
+      });
+
+      $('form#result').submit(function(event) {
+        location.reload();
+      });
+
+    });
+  </script>
+</head>
+
+<body>
+  <div class="col-sm-8 col-sm-offset-1">
+
+    <h1>FreeTranslate
+      <svg class="bi bi-file-text" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M4 1h8a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V3a2 2 0 012-2zm0 1a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1H4z" clip-rule="evenodd" />
+        <path fill-rule="evenodd" d="M4.5 10.5A.5.5 0 015 10h3a.5.5 0 010 1H5a.5.5 0 01-.5-.5zm0-2A.5.5 0 015 8h6a.5.5 0 010 1H5a.5.5 0 01-.5-.5zm0-2A.5.5 0 015 6h6a.5.5 0 010 1H5a.5.5 0 01-.5-.5zm0-2A.5.5 0 015 4h6a.5.5 0 010 1H5a.5.5 0 01-.5-.5z"
+          clip-rule="evenodd" />
+      </svg>
+    </h1>
+    <h2>The easiest way to use your free AWS Translate credits</h2>
+    <br />
+    <form id="submit">
+      <p>This website uses the powerful <a href="https://aws.amazon.com/translate/">Amazon Web Services
+          neural machine translation service</a> to enable you to translate text while taking full advantage of its free tier for the first year of use. This means 2 million characters translated per month as of May 2020. Refer to the <a
+          href="https://aws.amazon.com/translate/pricing/">pricing page</a> for details.</p>
+      <div id="url-group" class="form-group">
+        <label for="sel1">Input Language:</label>
+        <select class="form-control" id="inputlanguage">
+          <option>Afrikaans</option>
+          <option>Albanian</option>
+          <option>Amharic</option>
+          <option>Arabic</option>
+          <option>Azerbaijani</option>
+          <option>Bengali</option>
+          <option>Bosnian</option>
+          <option>Bulgarian</option>
+          <option>Chinese Simplified</option>
+          <option>Chinese Traditional</option>
+          <option>Croatian</option>
+          <option>Czech</option>
+          <option>Danish</option>
+          <option>Dari</option>
+          <option>Dutch</option>
+          <option>English</option>
+          <option>Estonian</option>
+          <option>Farsi (Persian)</option>
+          <option>Finnish</option>
+          <option>French</option>
+          <option>Canadian French</option>
+          <option>Georgian</option>
+          <option>German</option>
+          <option>Greek</option>
+          <option>Hausa</option>
+          <option>Hebrew</option>
+          <option>Hindi</option>
+          <option>Hungarian</option>
+          <option>Indonesian</option>
+          <option>Italian</option>
+          <option>Japanese</option>
+          <option>Korean</option>
+          <option>Latvian</option>
+          <option>Malay</option>
+          <option>Norwegian</option>
+          <option>Pashto</option>
+          <option>Polish</option>
+          <option>Portuguese</option>
+          <option>Romanian</option>
+          <option>Russian</option>
+          <option>Serbian</option>
+          <option>Slovak</option>
+          <option>Slovenian</option>
+          <option>Somali</option>
+          <option>Spanish</option>
+          <option>Swahili</option>
+          <option>Swedish</option>
+          <option>Tagalog</option>
+          <option>Tamil</option>
+          <option>Thai</option>
+          <option>Turkish</option>
+          <option>Ukrainian</option>
+          <option>Urdu</option>
+          <option>Vietnamese</option>
+        </select>
+        <label for="sel1">Output Language:</label>
+        <select class="form-control" id="outputlanguage">
+          <option>Afrikaans</option>
+          <option>Albanian</option>
+          <option>Amharic</option>
+          <option>Arabic</option>
+          <option>Azerbaijani</option>
+          <option>Bengali</option>
+          <option>Bosnian</option>
+          <option>Bulgarian</option>
+          <option>Chinese Simplified</option>
+          <option>Chinese Traditional</option>
+          <option>Croatian</option>
+          <option>Czech</option>
+          <option>Danish</option>
+          <option>Dari</option>
+          <option>Dutch</option>
+          <option>English</option>
+          <option>Estonian</option>
+          <option>Farsi (Persian)</option>
+          <option>Finnish</option>
+          <option>French</option>
+          <option>Canadian French</option>
+          <option>Georgian</option>
+          <option>German</option>
+          <option>Greek</option>
+          <option>Hausa</option>
+          <option>Hebrew</option>
+          <option>Hindi</option>
+          <option>Hungarian</option>
+          <option>Indonesian</option>
+          <option>Italian</option>
+          <option>Japanese</option>
+          <option>Korean</option>
+          <option>Latvian</option>
+          <option>Malay</option>
+          <option>Norwegian</option>
+          <option>Pashto</option>
+          <option>Polish</option>
+          <option>Portuguese</option>
+          <option>Romanian</option>
+          <option>Russian</option>
+          <option>Serbian</option>
+          <option>Slovak</option>
+          <option>Slovenian</option>
+          <option>Somali</option>
+          <option>Spanish</option>
+          <option>Swahili</option>
+          <option>Swedish</option>
+          <option>Tagalog</option>
+          <option>Tamil</option>
+          <option>Thai</option>
+          <option>Turkish</option>
+          <option>Ukrainian</option>
+          <option>Urdu</option>
+          <option>Vietnamese</option>
+        </select>
+        <label for="text">Paste your text to translate here</label>
+        <textarea class="form-control" required rows="10" maxlength="5000" id="text"></textarea>
+        <div class="help-block" style="display: none" id="translation-error"></div>
+      </div>
+      <button type="submit" class="btn btn-success" id="translation-input-submit">Translate!</button>
+
+    </form>
+    <form id="result" style="display: none">
+      <div class="alert alert-success">Successfully translated your text: </div>
+      <div class="form-group">
+        <label for="name">You can now copy/paste the translation into your favorite word processor!</label>
+        <textarea class="form-control text-monospace" required rows="15" id="textoutput" readonly="readonly"></textarea>
+      </div><button type="submit" class="btn btn-success" id="page_reload">New translation</button>
+      <div>
+      </div>
+    </form>
+
+    <div>
+      <p>An experimental project by Kevin Loeffler</p>
+      <a href="https://www.kevinmloeffler.com">Visit my website</a>
+    </div>
+
+  </div>
+</body>
+
+</html>
