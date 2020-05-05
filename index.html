@@ -33,8 +33,8 @@
             url: '/prod/translate',
             data: JSON.stringify({
               'text': $('#text').val(),
-              'source': $('#sourceLanguage').val(),
-              'target': $('#targetLanguage').val(),
+              'source': $('#inputLanguage').val(),
+              'target': $('#outputLanguage').val(),
               'cdn_prefix': window.location.hostname
             }),
             contentType: 'application/json; charset=utf-8',
