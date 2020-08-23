@@ -30,11 +30,11 @@
         // process the form
         $.ajax({
             type: 'POST',
-            url: '/prod/translate',
+            url: '/translate',
             data: JSON.stringify({
               'text': $('#text').val(),
-              'source': $('#inputLanguage').val(),
-              'target': $('#outputLanguage').val(),
+              'source': $('.inputpicker').val(),
+              'target': $('.targetpicker').val(),
               'cdn_prefix': window.location.hostname
             }),
             contentType: 'application/json; charset=utf-8',
@@ -87,120 +87,122 @@
           neural machine translation service</a> to enable you to translate text while taking full advantage of its free tier for the first year of use. This means 2 million characters translated per month as of May 2020. Refer to the <a
           href="https://aws.amazon.com/translate/pricing/">pricing page</a> for details.</p>
       <div id="url-group" class="form-group">
-        <label for="sel1">Input Language:</label>
-        <select class="form-control" id="inputlanguage">
-          <option>Afrikaans</option>
-          <option>Albanian</option>
-          <option>Amharic</option>
-          <option>Arabic</option>
-          <option>Azerbaijani</option>
-          <option>Bengali</option>
-          <option>Bosnian</option>
-          <option>Bulgarian</option>
-          <option>Chinese Simplified</option>
-          <option>Chinese Traditional</option>
-          <option>Croatian</option>
-          <option>Czech</option>
-          <option>Danish</option>
-          <option>Dari</option>
-          <option>Dutch</option>
-          <option>English</option>
-          <option>Estonian</option>
-          <option>Farsi (Persian)</option>
-          <option>Finnish</option>
-          <option>French</option>
-          <option>Canadian French</option>
-          <option>Georgian</option>
-          <option>German</option>
-          <option>Greek</option>
-          <option>Hausa</option>
-          <option>Hebrew</option>
-          <option>Hindi</option>
-          <option>Hungarian</option>
-          <option>Indonesian</option>
-          <option>Italian</option>
-          <option>Japanese</option>
-          <option>Korean</option>
-          <option>Latvian</option>
-          <option>Malay</option>
-          <option>Norwegian</option>
-          <option>Pashto</option>
-          <option>Polish</option>
-          <option>Portuguese</option>
-          <option>Romanian</option>
-          <option>Russian</option>
-          <option>Serbian</option>
-          <option>Slovak</option>
-          <option>Slovenian</option>
-          <option>Somali</option>
-          <option>Spanish</option>
-          <option>Swahili</option>
-          <option>Swedish</option>
-          <option>Tagalog</option>
-          <option>Tamil</option>
-          <option>Thai</option>
-          <option>Turkish</option>
-          <option>Ukrainian</option>
-          <option>Urdu</option>
-          <option>Vietnamese</option>
+        <label for="inputLanguage">Input Language:</label>
+        <select class="inputpicker" id="inputlanguage">
+          <option value="Afrikaans">Afrikaans</option>
+          <option value="Albanian">Albanian</option>
+          <option value="Amharic">Amharic</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Azerbaijani">Azerbaijani</option>
+          <option value="Bengali">Bengali</option>
+          <option value="Bosnian">Bosnian</option>
+          <option value="Bulgarian">Bulgarian</option>
+          <option value="Chinese Simplified">Chinese Simplified</option>
+          <option value="Chinese Traditional">Chinese Traditional</option>
+          <option value="Croatian">Croatian</option>
+          <option value="Czech">Czech</option>
+          <option value="Danish">Danish</option>
+          <option value="Dari">Dari</option>
+          <option value="Dutch">Dutch</option>
+          <option value="English">English</option>
+          <option value="Estonian">Estonian</option>
+          <option value="Farsi (Persian)">Farsi (Persian)</option>
+          <option value="Finnish">Finnish</option>
+          <option value="French">French</option>
+          <option value="Canadian French">Canadian French</option>
+          <option value="Georgian">Georgian</option>
+          <option value="German">German</option>
+          <option value="Greek">Greek</option>
+          <option value="Hausa">Hausa</option>
+          <option value="Hebrew">Hebrew</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Hungarian">Hungarian</option>
+          <option value="Indonesian">Indonesian</option>
+          <option value="Italian">Italian</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Korean">Korean</option>
+          <option value="Latvian">Latvian</option>
+          <option value="Malay">Malay</option>
+          <option value="Norwegian">Norwegian</option>
+          <option value="Pashto">Pashto</option>
+          <option value="Polish">Polish</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Romanian">Romanian</option>
+          <option value="Russian">Russian</option>
+          <option value="Serbian">Serbian</option>
+          <option value="Slovak">Slovak</option>
+          <option value="Slovenian">Slovenian</option>
+          <option value="Somali">Somali</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Swahili">Swahili</option>
+          <option value="Swedish">Swedish</option>
+          <option value="Tagalog">Tagalog</option>
+          <option value="Tamil">Tamil</option>
+          <option value="Thai">Thai</option>
+          <option value="Turkish">Turkish</option>
+          <option value="Ukrainian">Ukrainian</option>
+          <option value="Urdu">Urdu</option>
+          <option value="Vietnamese">Vietnamese</option>
         </select>
-        <label for="sel1">Output Language:</label>
-        <select class="form-control" id="outputlanguage">
-          <option>Afrikaans</option>
-          <option>Albanian</option>
-          <option>Amharic</option>
-          <option>Arabic</option>
-          <option>Azerbaijani</option>
-          <option>Bengali</option>
-          <option>Bosnian</option>
-          <option>Bulgarian</option>
-          <option>Chinese Simplified</option>
-          <option>Chinese Traditional</option>
-          <option>Croatian</option>
-          <option>Czech</option>
-          <option>Danish</option>
-          <option>Dari</option>
-          <option>Dutch</option>
-          <option>English</option>
-          <option>Estonian</option>
-          <option>Farsi (Persian)</option>
-          <option>Finnish</option>
-          <option>French</option>
-          <option>Canadian French</option>
-          <option>Georgian</option>
-          <option>German</option>
-          <option>Greek</option>
-          <option>Hausa</option>
-          <option>Hebrew</option>
-          <option>Hindi</option>
-          <option>Hungarian</option>
-          <option>Indonesian</option>
-          <option>Italian</option>
-          <option>Japanese</option>
-          <option>Korean</option>
-          <option>Latvian</option>
-          <option>Malay</option>
-          <option>Norwegian</option>
-          <option>Pashto</option>
-          <option>Polish</option>
-          <option>Portuguese</option>
-          <option>Romanian</option>
-          <option>Russian</option>
-          <option>Serbian</option>
-          <option>Slovak</option>
-          <option>Slovenian</option>
-          <option>Somali</option>
-          <option>Spanish</option>
-          <option>Swahili</option>
-          <option>Swedish</option>
-          <option>Tagalog</option>
-          <option>Tamil</option>
-          <option>Thai</option>
-          <option>Turkish</option>
-          <option>Ukrainian</option>
-          <option>Urdu</option>
-          <option>Vietnamese</option>
+        <br></br>
+        <label for="outputLanguage">Output Language:</label>
+        <select class="targetpicker" id="outputlanguage">
+          <option value="Afrikaans">Afrikaans</option>
+          <option value="Albanian">Albanian</option>
+          <option value="Amharic">Amharic</option>
+          <option value="Arabic">Arabic</option>
+          <option value="Azerbaijani">Azerbaijani</option>
+          <option value="Bengali">Bengali</option>
+          <option value="Bosnian">Bosnian</option>
+          <option value="Bulgarian">Bulgarian</option>
+          <option value="Chinese Simplified">Chinese Simplified</option>
+          <option value="Chinese Traditional">Chinese Traditional</option>
+          <option value="Croatian">Croatian</option>
+          <option value="Czech">Czech</option>
+          <option value="Danish">Danish</option>
+          <option value="Dari">Dari</option>
+          <option value="Dutch">Dutch</option>
+          <option value="English">English</option>
+          <option value="Estonian">Estonian</option>
+          <option value="Farsi (Persian)">Farsi (Persian)</option>
+          <option value="Finnish">Finnish</option>
+          <option value="French">French</option>
+          <option value="Canadian French">Canadian French</option>
+          <option value="Georgian">Georgian</option>
+          <option value="German">German</option>
+          <option value="Greek">Greek</option>
+          <option value="Hausa">Hausa</option>
+          <option value="Hebrew">Hebrew</option>
+          <option value="Hindi">Hindi</option>
+          <option value="Hungarian">Hungarian</option>
+          <option value="Indonesian">Indonesian</option>
+          <option value="Italian">Italian</option>
+          <option value="Japanese">Japanese</option>
+          <option value="Korean">Korean</option>
+          <option value="Latvian">Latvian</option>
+          <option value="Malay">Malay</option>
+          <option value="Norwegian">Norwegian</option>
+          <option value="Pashto">Pashto</option>
+          <option value="Polish">Polish</option>
+          <option value="Portuguese">Portuguese</option>
+          <option value="Romanian">Romanian</option>
+          <option value="Russian">Russian</option>
+          <option value="Serbian">Serbian</option>
+          <option value="Slovak">Slovak</option>
+          <option value="Slovenian">Slovenian</option>
+          <option value="Somali">Somali</option>
+          <option value="Spanish">Spanish</option>
+          <option value="Swahili">Swahili</option>
+          <option value="Swedish">Swedish</option>
+          <option value="Tagalog">Tagalog</option>
+          <option value="Tamil">Tamil</option>
+          <option value="Thai">Thai</option>
+          <option value="Turkish">Turkish</option>
+          <option value="Ukrainian">Ukrainian</option>
+          <option value="Urdu">Urdu</option>
+          <option value="Vietnamese">Vietnamese</option>
         </select>
+        <br></br>
         <label for="text">Paste your text to translate here</label>
         <textarea class="form-control" required rows="10" maxlength="5000" id="text"></textarea>
         <div class="help-block" style="display: none" id="translation-error"></div>

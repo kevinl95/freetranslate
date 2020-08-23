@@ -1,0 +1,410 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+    Generator: "former2"
+Description: "A tool for leveraging the free tier of AWS's translation API for users without programming experience."
+Resources:
+    LambdaFunction:
+        Type: "AWS::Lambda::Function"
+        Properties:
+            Description: ""
+            FunctionName: "translate"
+            Handler: "lambda_function.handler"
+            Code:
+                S3Bucket: !Sub "awslambda-${AWS::Region}-tasks"
+                S3Key: !Sub "/snapshots/${AWS::AccountId}/translate-c9a9a3b7-8d6b-4ad9-afde-07fa49296f44"
+                S3ObjectVersion: "d615f8Yg2T9T3S6FRSJFIb.PjsKleXE0"
+            MemorySize: 128
+            Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/translate-role-k8s4z0eg"
+            Runtime: "python3.8"
+            Timeout: 3
+            TracingConfig:
+                Mode: "PassThrough"
+
+    LambdaPermission:
+        Type: "AWS::Lambda::Permission"
+        Properties:
+            Action: "lambda:InvokeFunction"
+            FunctionName: !GetAtt LambdaFunction.Arn
+            Principal: "apigateway.amazonaws.com"
+            SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:fqdpwi8rj9/*/POST/${LambdaFunction}"
+
+    ApiGatewayMethod:
+        Type: "AWS::ApiGateway::Method"
+        Properties:
+            RestApiId: "fqdpwi8rj9"
+            ResourceId: "5igmad"
+            HttpMethod: "POST"
+            AuthorizationType: "NONE"
+            ApiKeyRequired: false
+            RequestParameters: {}
+            MethodResponses:
+              -
+                StatusCode: "200"
+            Integration:
+                CacheNamespace: "5igmad"
+                ContentHandling: "CONVERT_TO_TEXT"
+                IntegrationHttpMethod: "POST"
+                IntegrationResponses:
+                  -
+                    ResponseTemplates: {}
+                    StatusCode: "200"
+                PassthroughBehavior: "WHEN_NO_MATCH"
+                TimeoutInMillis: 29000
+                Type: "AWS"
+                Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaFunction}/invocations"
+
+    ApiGatewayRestApi:
+        Type: "AWS::ApiGateway::RestApi"
+        Properties:
+            Name: "FreeTranslate"
+            Description: "Leverage AWS Translate's free tier for educators"
+            ApiKeySourceType: "HEADER"
+            EndpointConfiguration:
+                Types:
+                  - "REGIONAL"
+
+    CloudFrontDistribution:
+        Type: "AWS::CloudFront::Distribution"
+        Properties:
+            DistributionConfig:
+                Origins:
+                  -
+                    CustomOriginConfig:
+                        HTTPPort: 80
+                        HTTPSPort: 443
+                        OriginKeepaliveTimeout: 5
+                        OriginProtocolPolicy: "match-viewer"
+                        OriginReadTimeout: 30
+                        OriginSSLProtocols:
+                          - "TLSv1"
+                          - "TLSv1.1"
+                          - "TLSv1.2"
+                    DomainName: !Sub "${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com"
+                    Id: !Sub "Custom-${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+                    OriginPath: "/prod"
+                OriginGroups:
+                    Quantity: 0
+                DefaultCacheBehavior:
+                    AllowedMethods:
+                      - "HEAD"
+                      - "GET"
+                    CachedMethods:
+                      - "HEAD"
+                      - "GET"
+                    Compress: false
+                    DefaultTTL: 86400
+                    ForwardedValues:
+                        Cookies:
+                            Forward: "none"
+                        QueryString: false
+                    MaxTTL: 31536000
+                    MinTTL: 0
+                    SmoothStreaming: false
+                    TargetOriginId: !Sub "Custom-${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+                    ViewerProtocolPolicy: "allow-all"
+                Comment: ""
+                PriceClass: "PriceClass_All"
+                Enabled: false
+                ViewerCertificate:
+                    CloudFrontDefaultCertificate: true
+                    MinimumProtocolVersion: "TLSv1"
+                Restrictions:
+                    GeoRestriction:
+                        RestrictionType: "none"
+                HttpVersion: "http2"
+                IPV6Enabled: true
+
+    ApiGatewayStage:
+        Type: "AWS::ApiGateway::Stage"
+        Properties:
+            StageName: "prod"
+            DeploymentId: "6wdsth"
+            RestApiId: !Ref ApiGatewayRestApi
+            CacheClusterEnabled: false
+            TracingEnabled: false
+
+    ApiGatewayDeployment:
+        Type: "AWS::ApiGateway::Deployment"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+
+    ApiGatewayResource:
+        Type: "AWS::ApiGateway::Resource"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+
+    ApiGatewayResource2:
+        Type: "AWS::ApiGateway::Resource"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+            PathPart: !Ref LambdaFunction
+            ParentId: !Ref ApiGatewayResource
+
+    ApiGatewayResource3:
+        Type: "AWS::ApiGateway::Resource"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+            PathPart: "index"
+            ParentId: !Ref ApiGatewayResource
+
+    ApiGatewayMethod2:
+        Type: "AWS::ApiGateway::Method"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+            ResourceId: !Ref ApiGatewayResource3
+            HttpMethod: "GET"
+            AuthorizationType: "NONE"
+            ApiKeyRequired: false
+            RequestParameters: {}
+            MethodResponses:
+              -
+                ResponseParameters:
+                    "method.response.header.Content-Type": false
+                StatusCode: "200"
+            Integration:
+                CacheNamespace: !Ref ApiGatewayResource3
+                IntegrationResponses:
+                  -
+                    ResponseParameters:
+                        "method.response.header.Content-Type": "'text/html'"
+                    ResponseTemplates:
+                        "application/json": !Sub |
+                            <!DOCTYPE html>
+                            <html lang="en">
+
+                            <head>
+                              <meta charset="utf-8">
+                              <title>FreeTranslate</title>
+                              <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+                              <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+                              <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-maxlength/1.9.0/bootstrap-maxlength.min.js"></script>
+                              <script type="text/javascript">
+                                $(document).ready(function() {
+
+                                  // used only to allow local serving of files
+                                  $.ajaxSetup({
+                                    beforeSend: function(xhr) {
+                                      if (xhr.overrideMimeType) {
+                                        xhr.overrideMimeType("application/json");
+                                      }
+                                    }
+                                  });
+                                  $('textarea#text').maxlength({
+                                    alwaysShow: true
+                                  });
+
+                                  $('#text').focus(); // set initial focus
+
+                                  $('form#submit').submit(function(event) {
+                                    $('#translation-input-submit').prop('disabled', true);
+
+                                    // process the form
+                                    $.ajax({
+                                        type: 'POST',
+                                        url: '/${LambdaFunction}',
+                                        data: JSON.stringify({
+                                          'text': $('#text').val(),
+                                          'source': $('.inputpicker').val(),
+                                          'target': $('.targetpicker').val(),
+                                          'cdn_prefix': window.location.hostname
+                                        }),
+                                        contentType: 'application/json; charset=utf-8',
+                                        dataType: 'json',
+                                        encode: true
+                                      })
+                                      .done(function(data, textStatus, jqXHR) {
+                                        $('#translation-input-submit').prop('disabled', false);
+                                        if (data.error) {
+                                          $('#url-group').addClass('has-error'); // add the error class to show red input
+                                          $('#translation-error').show().text(data.error); // add the actual error message under our input
+                                        } else {
+                                          $('form#submit').hide(); // hide initial submit form
+                                          $('form#result').show(); // and show the one used to display the results
+                                          $('#textoutput').val(data.result).focus().select();
+                                        }
+                                      })
+                                      .fail(function(_, _, errorThrown) {
+                                        $('#translation-input-submit').prop('disabled', false);
+                                        $('#url-group').addClass('has-error'); // add the error class to show red input
+                                        $('#translation-error').show().text("Server error: " + errorThrown); // add the actual error message under our input
+                                      });
+
+                                    // stop the form from submitting the normal way and refreshing the page
+                                    event.preventDefault();
+                                  });
+
+                                  $('form#result').submit(function(event) {
+                                    location.reload();
+                                  });
+
+                                });
+                              </script>
+                            </head>
+
+                            <body>
+                              <div class="col-sm-8 col-sm-offset-1">
+
+                                <h1>FreeTranslate
+                                  <svg class="bi bi-file-text" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M4 1h8a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V3a2 2 0 012-2zm0 1a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1V3a1 1 0 00-1-1H4z" clip-rule="evenodd" />
+                                    <path fill-rule="evenodd" d="M4.5 10.5A.5.5 0 015 10h3a.5.5 0 010 1H5a.5.5 0 01-.5-.5zm0-2A.5.5 0 015 8h6a.5.5 0 010 1H5a.5.5 0 01-.5-.5zm0-2A.5.5 0 015 6h6a.5.5 0 010 1H5a.5.5 0 01-.5-.5zm0-2A.5.5 0 015 4h6a.5.5 0 010 1H5a.5.5 0 01-.5-.5z"
+                                      clip-rule="evenodd" />
+                                  </svg>
+                                </h1>
+                                <h2>The easiest way to use your free AWS Translate credits</h2>
+                                <br />
+                                <form id="submit">
+                                  <p>This website uses the powerful <a href="https://aws.amazon.com/${LambdaFunction}/">Amazon Web Services
+                                      neural machine translation service</a> to enable you to ${LambdaFunction} text while taking full advantage of its free tier for the first year of use. This means 2 million characters ${LambdaFunction}d per month as of May 2020. Refer to the <a
+                                      href="https://aws.amazon.com/${LambdaFunction}/pricing/">pricing page</a> for details.</p>
+                                  <div id="url-group" class="form-group">
+                                    <label for="inputLanguage">Input Language:</label>
+                                    <select class="inputpicker" id="inputlanguage">
+                                      <option value="Afrikaans">Afrikaans</option>
+                                      <option value="Albanian">Albanian</option>
+                                      <option value="Amharic">Amharic</option>
+                                      <option value="Arabic">Arabic</option>
+                                      <option value="Azerbaijani">Azerbaijani</option>
+                                      <option value="Bengali">Bengali</option>
+                                      <option value="Bosnian">Bosnian</option>
+                                      <option value="Bulgarian">Bulgarian</option>
+                                      <option value="Chinese Simplified">Chinese Simplified</option>
+                                      <option value="Chinese Traditional">Chinese Traditional</option>
+                                      <option value="Croatian">Croatian</option>
+                                      <option value="Czech">Czech</option>
+                                      <option value="Danish">Danish</option>
+                                      <option value="Dari">Dari</option>
+                                      <option value="Dutch">Dutch</option>
+                                      <option value="English">English</option>
+                                      <option value="Estonian">Estonian</option>
+                                      <option value="Farsi (Persian)">Farsi (Persian)</option>
+                                      <option value="Finnish">Finnish</option>
+                                      <option value="French">French</option>
+                                      <option value="Canadian French">Canadian French</option>
+                                      <option value="Georgian">Georgian</option>
+                                      <option value="German">German</option>
+                                      <option value="Greek">Greek</option>
+                                      <option value="Hausa">Hausa</option>
+                                      <option value="Hebrew">Hebrew</option>
+                                      <option value="Hindi">Hindi</option>
+                                      <option value="Hungarian">Hungarian</option>
+                                      <option value="Indonesian">Indonesian</option>
+                                      <option value="Italian">Italian</option>
+                                      <option value="Japanese">Japanese</option>
+                                      <option value="Korean">Korean</option>
+                                      <option value="Latvian">Latvian</option>
+                                      <option value="Malay">Malay</option>
+                                      <option value="Norwegian">Norwegian</option>
+                                      <option value="Pashto">Pashto</option>
+                                      <option value="Polish">Polish</option>
+                                      <option value="Portuguese">Portuguese</option>
+                                      <option value="Romanian">Romanian</option>
+                                      <option value="Russian">Russian</option>
+                                      <option value="Serbian">Serbian</option>
+                                      <option value="Slovak">Slovak</option>
+                                      <option value="Slovenian">Slovenian</option>
+                                      <option value="Somali">Somali</option>
+                                      <option value="Spanish">Spanish</option>
+                                      <option value="Swahili">Swahili</option>
+                                      <option value="Swedish">Swedish</option>
+                                      <option value="Tagalog">Tagalog</option>
+                                      <option value="Tamil">Tamil</option>
+                                      <option value="Thai">Thai</option>
+                                      <option value="Turkish">Turkish</option>
+                                      <option value="Ukrainian">Ukrainian</option>
+                                      <option value="Urdu">Urdu</option>
+                                      <option value="Vietnamese">Vietnamese</option>
+                                    </select>
+                                    <br></br>
+                                    <label for="outputLanguage">Output Language:</label>
+                                    <select class="targetpicker" id="outputlanguage">
+                                      <option value="Afrikaans">Afrikaans</option>
+                                      <option value="Albanian">Albanian</option>
+                                      <option value="Amharic">Amharic</option>
+                                      <option value="Arabic">Arabic</option>
+                                      <option value="Azerbaijani">Azerbaijani</option>
+                                      <option value="Bengali">Bengali</option>
+                                      <option value="Bosnian">Bosnian</option>
+                                      <option value="Bulgarian">Bulgarian</option>
+                                      <option value="Chinese Simplified">Chinese Simplified</option>
+                                      <option value="Chinese Traditional">Chinese Traditional</option>
+                                      <option value="Croatian">Croatian</option>
+                                      <option value="Czech">Czech</option>
+                                      <option value="Danish">Danish</option>
+                                      <option value="Dari">Dari</option>
+                                      <option value="Dutch">Dutch</option>
+                                      <option value="English">English</option>
+                                      <option value="Estonian">Estonian</option>
+                                      <option value="Farsi (Persian)">Farsi (Persian)</option>
+                                      <option value="Finnish">Finnish</option>
+                                      <option value="French">French</option>
+                                      <option value="Canadian French">Canadian French</option>
+                                      <option value="Georgian">Georgian</option>
+                                      <option value="German">German</option>
+                                      <option value="Greek">Greek</option>
+                                      <option value="Hausa">Hausa</option>
+                                      <option value="Hebrew">Hebrew</option>
+                                      <option value="Hindi">Hindi</option>
+                                      <option value="Hungarian">Hungarian</option>
+                                      <option value="Indonesian">Indonesian</option>
+                                      <option value="Italian">Italian</option>
+                                      <option value="Japanese">Japanese</option>
+                                      <option value="Korean">Korean</option>
+                                      <option value="Latvian">Latvian</option>
+                                      <option value="Malay">Malay</option>
+                                      <option value="Norwegian">Norwegian</option>
+                                      <option value="Pashto">Pashto</option>
+                                      <option value="Polish">Polish</option>
+                                      <option value="Portuguese">Portuguese</option>
+                                      <option value="Romanian">Romanian</option>
+                                      <option value="Russian">Russian</option>
+                                      <option value="Serbian">Serbian</option>
+                                      <option value="Slovak">Slovak</option>
+                                      <option value="Slovenian">Slovenian</option>
+                                      <option value="Somali">Somali</option>
+                                      <option value="Spanish">Spanish</option>
+                                      <option value="Swahili">Swahili</option>
+                                      <option value="Swedish">Swedish</option>
+                                      <option value="Tagalog">Tagalog</option>
+                                      <option value="Tamil">Tamil</option>
+                                      <option value="Thai">Thai</option>
+                                      <option value="Turkish">Turkish</option>
+                                      <option value="Ukrainian">Ukrainian</option>
+                                      <option value="Urdu">Urdu</option>
+                                      <option value="Vietnamese">Vietnamese</option>
+                                    </select>
+                                    <br></br>
+                                    <label for="text">Paste your text to ${LambdaFunction} here</label>
+                                    <textarea class="form-control" required rows="10" maxlength="5000" id="text"></textarea>
+                                    <div class="help-block" style="display: none" id="translation-error"></div>
+                                  </div>
+                                  <button type="submit" class="btn btn-success" id="translation-input-submit">Translate!</button>
+
+                                </form>
+                                <form id="result" style="display: none">
+                                  <div class="alert alert-success">Successfully ${LambdaFunction}d your text: </div>
+                                  <div class="form-group">
+                                    <label for="name">You can now copy/paste the translation into your favorite word processor!</label>
+                                    <textarea class="form-control text-monospace" required rows="15" id="textoutput" readonly="readonly"></textarea>
+                                  </div><button type="submit" class="btn btn-success" id="page_reload">New translation</button>
+                                  <div>
+                                  </div>
+                                </form>
+
+                                <div>
+                                  <p>An experimental project by Kevin Loeffler</p>
+                                  <a href="https://www.kevinmloeffler.com">Visit my website</a>
+                                </div>
+
+                              </div>
+                            </body>
+
+                            </html>
+
+                    SelectionPattern: ""
+                    StatusCode: "200"
+                PassthroughBehavior: "WHEN_NO_MATCH"
+                RequestTemplates:
+                    "application/json": "{\"statusCode\": 200}"
+                TimeoutInMillis: 29000
+                Type: "MOCK"
