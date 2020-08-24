@@ -84,7 +84,7 @@ Resources:
                     ViewerProtocolPolicy: "allow-all"
                 Comment: ""
                 PriceClass: "PriceClass_All"
-                Enabled: false
+                Enabled: true
                 ViewerCertificate:
                     CloudFrontDefaultCertificate: true
                     MinimumProtocolVersion: "TLSv1"
@@ -425,4 +425,4 @@ Resources:
 Outputs:
   outputpage:
     Description: URL of the webpage where you can use FreeTranslate
-    Value: !Sub "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Value: !Sub "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod/stack/index"
