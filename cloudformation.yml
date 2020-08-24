@@ -10,12 +10,27 @@ Resources:
             FunctionName: "translate"
             Handler: "lambda_function.handler"
             Code:
-                S3Bucket: !Sub "awslambda-${AWS::Region}-tasks"
-                S3Key: !Sub "/snapshots/${AWS::AccountId}/translate-c9a9a3b7-8d6b-4ad9-afde-07fa49296f44"
-                S3ObjectVersion: "d615f8Yg2T9T3S6FRSJFIb.PjsKleXE0"
+              ZipFile: |
+                import boto3
+
+
+                def handler(event, context):
+                    print(event)
+                    languagecodes = {'Afrikaans': 'af', 'Albanian': 'sq', 'Amharic': 'am', 'Arabic': 'ar', 'Azerbaijani': 'az', 'Bengali': 'bn', 'Bosnian': 'bs', 'Bulgarian': 'bg', 'Chinese (Simplified)': 'zh', 'Chinese (Traditional)': 'zh-TW', 'Croatian': 'hr', 'Czech': 'cs', 'Danish': 'da', 'Dari': 'fa-AF', 'Dutch': 'nl', 'English': 'en', 'Estonian': 'et', 'Finnish': 'fi', 'French': 'fr', 'French (Canada)': 'fr-CA', 'Georgian': 'ka', 'German': 'de', 'Greek': 'el', 'Hausa': 'ha', 'Hebrew': 'he', 'Hindi': 'hi', 'Hungarian': 'hu',
+                                     'Indonesian': 'id', 'Italian': 'it', 'Japanese': 'ja', 'Korean': 'ko', 'Latvian': 'lv', 'Malay': 'ms', 'Norwegian': 'no', 'Persian': 'fa', 'Pashto': 'ps', 'Polish': 'pl', 'Portuguese': 'pt', 'Romanian': 'ro', 'Russian': 'ru', 'Serbian': 'sr', 'Slovak': 'sk', 'Slovenian': 'sl', 'Somali': 'so', 'Spanish': 'es', 'Spanish (Mexico)': 'es-MX', 'Swahili': 'sw', 'Swedish': 'sv', 'Tagalog': 'tl', 'Tamil': 'ta', 'Thai': 'th', 'Turkish': 'tr', 'Ukrainian': 'uk', 'Urdu': 'ur', 'Vietnamese': 'vi'}
+                    client = boto3.client('translate')
+                    text = event.get("text")
+                    sourceLanguage = event.get("source")
+                    targetLanguage = event.get("target")
+                    response = client.translate_text(
+                        Text=text,
+                        SourceLanguageCode=languagecodes[sourceLanguage],
+                        TargetLanguageCode=languagecodes[targetLanguage]
+                    )
+                    return {"result": response['TranslatedText']}
             MemorySize: 128
             Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/translate-role-k8s4z0eg"
-            Runtime: "python3.8"
+            Runtime: "python3.7"
             Timeout: 3
             TracingConfig:
                 Mode: "PassThrough"
@@ -27,41 +42,6 @@ Resources:
             FunctionName: !GetAtt LambdaFunction.Arn
             Principal: "apigateway.amazonaws.com"
             SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:fqdpwi8rj9/*/POST/${LambdaFunction}"
-
-    ApiGatewayMethod:
-        Type: "AWS::ApiGateway::Method"
-        Properties:
-            RestApiId: "fqdpwi8rj9"
-            ResourceId: "5igmad"
-            HttpMethod: "POST"
-            AuthorizationType: "NONE"
-            ApiKeyRequired: false
-            RequestParameters: {}
-            MethodResponses:
-              -
-                StatusCode: "200"
-            Integration:
-                CacheNamespace: "5igmad"
-                ContentHandling: "CONVERT_TO_TEXT"
-                IntegrationHttpMethod: "POST"
-                IntegrationResponses:
-                  -
-                    ResponseTemplates: {}
-                    StatusCode: "200"
-                PassthroughBehavior: "WHEN_NO_MATCH"
-                TimeoutInMillis: 29000
-                Type: "AWS"
-                Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${LambdaFunction}/invocations"
-
-    ApiGatewayRestApi:
-        Type: "AWS::ApiGateway::RestApi"
-        Properties:
-            Name: "FreeTranslate"
-            Description: "Leverage AWS Translate's free tier for educators"
-            ApiKeySourceType: "HEADER"
-            EndpointConfiguration:
-                Types:
-                  - "REGIONAL"
 
     CloudFrontDistribution:
         Type: "AWS::CloudFront::Distribution"
@@ -114,44 +94,53 @@ Resources:
                 HttpVersion: "http2"
                 IPV6Enabled: true
 
-    ApiGatewayStage:
-        Type: "AWS::ApiGateway::Stage"
+    ApiGatewayRestApi:
+        Type: "AWS::ApiGateway::RestApi"
         Properties:
-            StageName: "prod"
-            DeploymentId: "6wdsth"
-            RestApiId: !Ref ApiGatewayRestApi
-            CacheClusterEnabled: false
-            TracingEnabled: false
+            Name: "FreeTranslate"
+            Description: "Leverage AWS Translate's free tier for educators"
+            ApiKeySourceType: "HEADER"
+            EndpointConfiguration:
+                Types:
+                  - "REGIONAL"
 
     ApiGatewayDeployment:
         Type: "AWS::ApiGateway::Deployment"
+        DependsOn:
+          - ApiGatewayMethod
+          - ApiGatewayMethod2
         Properties:
             RestApiId: !Ref ApiGatewayRestApi
+            StageName: "prod"
 
     ApiGatewayResource:
         Type: "AWS::ApiGateway::Resource"
         Properties:
             RestApiId: !Ref ApiGatewayRestApi
+            PathPart: stack
+            ParentId: !GetAtt
+              - ApiGatewayRestApi
+              - RootResourceId
 
     ApiGatewayResource2:
-        Type: "AWS::ApiGateway::Resource"
-        Properties:
-            RestApiId: !Ref ApiGatewayRestApi
-            PathPart: !Ref LambdaFunction
-            ParentId: !Ref ApiGatewayResource
-
-    ApiGatewayResource3:
         Type: "AWS::ApiGateway::Resource"
         Properties:
             RestApiId: !Ref ApiGatewayRestApi
             PathPart: "index"
             ParentId: !Ref ApiGatewayResource
 
-    ApiGatewayMethod2:
+    ApiGatewayResource3:
+        Type: "AWS::ApiGateway::Resource"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+            PathPart: "translate"
+            ParentId: !Ref ApiGatewayResource
+
+    ApiGatewayMethod:
         Type: "AWS::ApiGateway::Method"
         Properties:
             RestApiId: !Ref ApiGatewayRestApi
-            ResourceId: !Ref ApiGatewayResource3
+            ResourceId: !Ref ApiGatewayResource2
             HttpMethod: "GET"
             AuthorizationType: "NONE"
             ApiKeyRequired: false
@@ -162,7 +151,7 @@ Resources:
                     "method.response.header.Content-Type": false
                 StatusCode: "200"
             Integration:
-                CacheNamespace: !Ref ApiGatewayResource3
+                CacheNamespace: !Ref ApiGatewayResource2
                 IntegrationResponses:
                   -
                     ResponseParameters:
@@ -201,7 +190,7 @@ Resources:
                                     // process the form
                                     $.ajax({
                                         type: 'POST',
-                                        url: '/${LambdaFunction}',
+                                        url: '/prod/translate',
                                         data: JSON.stringify({
                                           'text': $('#text').val(),
                                           'source': $('.inputpicker').val(),
@@ -254,9 +243,9 @@ Resources:
                                 <h2>The easiest way to use your free AWS Translate credits</h2>
                                 <br />
                                 <form id="submit">
-                                  <p>This website uses the powerful <a href="https://aws.amazon.com/${LambdaFunction}/">Amazon Web Services
-                                      neural machine translation service</a> to enable you to ${LambdaFunction} text while taking full advantage of its free tier for the first year of use. This means 2 million characters ${LambdaFunction}d per month as of May 2020. Refer to the <a
-                                      href="https://aws.amazon.com/${LambdaFunction}/pricing/">pricing page</a> for details.</p>
+                                  <p>This website uses the powerful <a href="https://aws.amazon.com/translate/">Amazon Web Services
+                                      neural machine translation service</a> to enable you to translate text while taking full advantage of its free tier for the first year of use. This means 2 million characters translated per month as of May 2020. Refer to the <a
+                                      href="https://aws.amazon.com/translate/pricing/">pricing page</a> for details.</p>
                                   <div id="url-group" class="form-group">
                                     <label for="inputLanguage">Input Language:</label>
                                     <select class="inputpicker" id="inputlanguage">
@@ -374,7 +363,7 @@ Resources:
                                       <option value="Vietnamese">Vietnamese</option>
                                     </select>
                                     <br></br>
-                                    <label for="text">Paste your text to ${LambdaFunction} here</label>
+                                    <label for="text">Paste your text to translate here</label>
                                     <textarea class="form-control" required rows="10" maxlength="5000" id="text"></textarea>
                                     <div class="help-block" style="display: none" id="translation-error"></div>
                                   </div>
@@ -382,7 +371,7 @@ Resources:
 
                                 </form>
                                 <form id="result" style="display: none">
-                                  <div class="alert alert-success">Successfully ${LambdaFunction}d your text: </div>
+                                  <div class="alert alert-success">Successfully translated your text: </div>
                                   <div class="form-group">
                                     <label for="name">You can now copy/paste the translation into your favorite word processor!</label>
                                     <textarea class="form-control text-monospace" required rows="15" id="textoutput" readonly="readonly"></textarea>
@@ -408,3 +397,32 @@ Resources:
                     "application/json": "{\"statusCode\": 200}"
                 TimeoutInMillis: 29000
                 Type: "MOCK"
+
+    ApiGatewayMethod2:
+        Type: "AWS::ApiGateway::Method"
+        Properties:
+            RestApiId: !Ref ApiGatewayRestApi
+            ResourceId: !Ref ApiGatewayResource3
+            HttpMethod: "POST"
+            AuthorizationType: "NONE"
+            ApiKeyRequired: false
+            RequestParameters: {}
+            MethodResponses:
+              -
+                StatusCode: "200"
+            Integration:
+                CacheNamespace: !Ref ApiGatewayResource3
+                ContentHandling: "CONVERT_TO_TEXT"
+                IntegrationHttpMethod: "POST"
+                IntegrationResponses:
+                  -
+                    ResponseTemplates: {}
+                    StatusCode: "200"
+                PassthroughBehavior: "WHEN_NO_MATCH"
+                TimeoutInMillis: 29000
+                Type: "AWS"
+                Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:translate/invocations"
+Outputs:
+  outputpage:
+    Description: URL of the webpage where you can use FreeTranslate
+    Value: !Sub "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
