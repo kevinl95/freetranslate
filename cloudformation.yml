@@ -8,7 +8,7 @@ Resources:
         Properties:
             Description: ""
             FunctionName: "translate"
-            Handler: "lambda_function.handler"
+            Handler: "index.handler"
             Code:
               ZipFile: |
                 import boto3
@@ -190,7 +190,7 @@ Resources:
                                     // process the form
                                     $.ajax({
                                         type: 'POST',
-                                        url: '/prod/translate',
+                                        url: '/prod/stack/translate',
                                         data: JSON.stringify({
                                           'text': $('#text').val(),
                                           'source': $('.inputpicker').val(),
