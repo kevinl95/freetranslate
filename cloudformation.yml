@@ -41,7 +41,7 @@ Resources:
             Action: "lambda:InvokeFunction"
             FunctionName: !GetAtt LambdaFunction.Arn
             Principal: "apigateway.amazonaws.com"
-            SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:fqdpwi8rj9/*/POST/${LambdaFunction}"
+            SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayRestApi}/*/*/*"
 
     CloudFrontDistribution:
         Type: "AWS::CloudFront::Distribution"
